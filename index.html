@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Cloud Contacts</title>
+</head>
+<body>
+  <h1>Contact Cloud</h1>
+
+  <input id="email" placeholder="email">
+  <input id="password" placeholder="password" type="password">
+  <button onclick="login()">Login</button>
+
+  <hr>
+
+  <input id="name" placeholder="name">
+  <input id="phone" placeholder="phone">
+  <button onclick="saveContact()">Save</button>
+
+  <ul id="list"></ul>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabaseUrl = "DEIN_URL";
+    const supabaseKey = "DEIN_ANON_KEY";
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    window.login = async function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      await supabase.auth.signInWithPassword({ email, password });
+      loadContacts();
+    };
+
+    window.saveContact = async function () {
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+
+      const user = await supabase.auth.getUser();
+
+      await supabase.from("contacts").insert({
+        name,
+        phone,
+        user_id: user.data.user.id
+      });
+
+      loadContacts();
+    };
+
+    async function loadContacts() {
+      const { data } = await supabase.from("contacts").select("*");
+      
+      document.getElementById("list").innerHTML =
+        data.map(c => `<li>${c.name} - ${c.phone}</li>`).join("");
+    }
+  </script>
+</body>
+</html>
